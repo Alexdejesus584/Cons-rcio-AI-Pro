@@ -45,8 +45,8 @@ ssh $SERVER_USER@$SERVER_HOST << EOF
         cd $REMOTE_DIR
     fi
 
-    # Configurar Rede Externa
-    docker network inspect network_consorcioaipro >/dev/null 2>&1 || docker network create network_consorcioaipro
+    # Garantir que a rede existe
+    docker network inspect network_phpmyadmin >/dev/null 2>&1 || docker network create network_phpmyadmin
 
     # Exportar variaveis
     export DOMAIN=$DOMAIN

@@ -30,7 +30,7 @@ ssh $SERVER_USER@$SERVER_HOST << EOF
     cd $REMOTE_DIR
     
     # Criar rede externa se não existir
-    docker network inspect network_consorcioaipro >/dev/null 2>&1 || docker network create network_consorcioaipro
+    docker network inspect network_phpmyadmin >/dev/null 2>&1 || docker network create network_phpmyadmin
 
     # Exportar variável de domínio para o docker-compose
     export DOMAIN=$DOMAIN
