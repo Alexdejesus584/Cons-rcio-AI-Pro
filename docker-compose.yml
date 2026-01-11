@@ -6,13 +6,14 @@ services:
     build: .
     restart: always
     environment:
-      - DATABASE_URL=mysql://root:root@db:3306/consorcio_ai
+      # Conecta no host 'mysql' que está na mesma rede 'proxy' ou 'network_consorcioaipro' se estiverem interligadas
+      # Ou usa o IP do gateway se estiverem em redes separadas
+      - DATABASE_URL=mysql://root:WAZ13198413t@mysql:3306/consorcio_ai
       - JWT_SECRET=${JWT_SECRET}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
     volumes:
       - ./uploads:/app/uploads
     networks:
-      - internal
       - network_consorcioaipro
     labels:
       - "traefik.enable=true"
@@ -21,22 +22,6 @@ services:
       - "traefik.http.routers.consorcio-ai-pro.tls.certresolver=myresolver"
       - "traefik.http.services.consorcio-ai-pro.loadbalancer.server.port=3000"
 
-  db:
-    image: mysql:8.0
-    container_name: consorcio-ai-pro-db
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: consorcio_ai
-    volumes:
-      - db_data:/var/lib/mysql
-    networks:
-      - internal
-
 networks:
-  internal:
   network_consorcioaipro:
     external: true
-
-volumes:
-  db_data:

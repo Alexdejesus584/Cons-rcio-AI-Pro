@@ -36,12 +36,12 @@ ssh $SERVER_USER@$SERVER_HOST << EOF
     export DOMAIN=$DOMAIN
     
     # Subir containers (Build e Detach)
-    docker-compose up -d --build --remove-orphans
+    docker compose up -d --build --remove-orphans
     
     # Executar migrações do banco de dados (aguarda o banco subir um pouco)
     echo "Aguardando banco de dados iniciar..."
     sleep 10
-    docker-compose exec -T app npx prisma migrate deploy
+    docker compose exec -T app npx prisma migrate deploy
     
     echo "Deploy concluído!"
 EOF
