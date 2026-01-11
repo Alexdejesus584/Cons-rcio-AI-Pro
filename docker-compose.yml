@@ -6,9 +6,8 @@ services:
     build: .
     restart: always
     environment:
-      # Conecta no host 'mysql' que está na mesma rede 'proxy' ou 'network_consorcioaipro'
-      # Senha e Banco atualizados
-      - DATABASE_URL=mysql://root:FO!t3oW6q(-im2Vw@mysql:3306/consorcio-ai-pro
+      # Conecta no host 'php-mysql' na porta 3306 com o banco 'consorcio-ai-pro'
+      - DATABASE_URL=mysql://root:FO!t3oW6q(-im2Vw@php-mysql:3306/consorcio-ai-pro
       - JWT_SECRET=${JWT_SECRET}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
     volumes:
