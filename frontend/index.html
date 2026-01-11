@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Consórcio AI Knowledge</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <aside class="sidebar">
+        <div class="logo">Consórcio AI</div>
+        <nav>
+            <a href="#" class="nav-link active" onclick="showSection('dashboard')">Painel</a>
+            <a href="#" class="nav-link" onclick="showSection('knowledge')">Conhecimento</a>
+            <a href="#" class="nav-link" onclick="showSection('materials')">Materiais</a>
+            <a href="#" class="nav-link" onclick="showSection('leads')">Leads</a>
+            <a href="#" class="nav-link" onclick="showSection('settings')">⚙️ Configurações</a>
+            <hr style="border-color: #1e293b; margin: 1rem 0;">
+            <a href="#" class="nav-link" onclick="logout()" style="color: #f87171;">Sair</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <!-- Dashboard -->
+        <section id="dashboard-section">
+            <header>
+                <h1>Dashboard de Vendas</h1>
+            </header>
+            <div class="grid">
+                <div class="card">
+                    <h3>Leads Quentes</h3>
+                    <p id="hot-leads-count" style="font-size: 2rem; font-weight: 700;">0</p>
+                </div>
+                <div class="card">
+                    <h3>Total de Conhecimento</h3>
+                    <p id="knowledge-count" style="font-size: 2rem; font-weight: 700;">0</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Conhecimento -->
+        <section id="knowledge-section" style="display: none;">
+            <header>
+                <h1>Gestão de Conhecimento</h1>
+                <button class="btn btn-primary" onclick="openKnowledgeModal()">+ Novo Campo</button>
+            </header>
+            <div id="knowledge-list" class="grid"></div>
+        </section>
+
+        <!-- Materiais -->
+        <section id="materials-section" style="display: none;">
+            <header>
+                <h1>Materiais (PDF/Imagens)</h1>
+                <button class="btn btn-primary" onclick="openMaterialModal()">+ Novo Material</button>
+            </header>
+            <div id="materials-list" class="grid"></div>
+        </section>
+
+        <!-- Leads -->
+        <section id="leads-section" style="display: none;">
+            <header>
+                <h1>Leads Capturados</h1>
+            </header>
+            <div class="card">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="text-align: left; border-bottom: 1px solid var(--border);">
+                            <th style="padding: 1rem;">Nome</th>
+                            <th style="padding: 1rem;">Telefone</th>
+                            <th style="padding: 1rem;">Interesse</th>
+                            <th style="padding: 1rem;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leads-table-body"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Configurações -->
+        <section id="settings-section" style="display: none;">
+            <header>
+                <h1>⚙️ Configurações</h1>
+            </header>
+            
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <h3 style="margin-bottom: 1rem;">🔑 Gerar Token de Serviço para N8n</h3>
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+                    Crie tokens de longa duração para integrar com N8n e outras automações.
+                </p>
+                
+                <form id="service-token-form">
+                    <div class="form-group">
+                        <label>Nome do Token</label>
+                        <input type="text" id="st-nome" required placeholder="Ex: N8n WhatsApp Bot">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Escopos (Permissões)</label>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-top: 0.5rem;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="scopes" value="ia:execute" checked> ia:execute (Conversar com IA)
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="scopes" value="leads:read" checked> leads:read (Ler leads)
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="scopes" value="leads:write"> leads:write (Alterar leads)
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="scopes" value="knowledge:read"> knowledge:read (Ler conhecimento)
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="scopes" value="knowledge:write"> knowledge:write (Editar conhecimento)
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="scopes" value="materiais:write"> materiais:write (Upload materiais)
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Validade</label>
+                        <select id="st-expires">
+                            <option value="30d">30 dias</option>
+                            <option value="90d">90 dias</option>
+                            <option value="365d" selected>1 ano</option>
+                            <option value="1825d">5 anos</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Gerar Token</button>
+                </form>
+            </div>
+            
+            <!-- Resultado do Token -->
+            <div id="token-result" class="card" style="display: none; background: #0d1f17; border: 1px solid #10b981;">
+                <h3 style="color: #10b981; margin-bottom: 1rem;">✅ Token Criado!</h3>
+                <p style="color: var(--text-muted); margin-bottom: 0.5rem;">Copie e guarde este token. Ele não será mostrado novamente!</p>
+                <div style="background: #0f172a; padding: 1rem; border-radius: 0.5rem; font-family: monospace; word-break: break-all; margin: 1rem 0;">
+                    <code id="generated-token" style="color: #f8fafc;"></code>
+                </div>
+                <button class="btn btn-primary" onclick="copyToken()">📋 Copiar Token</button>
+                
+                <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #1e293b;">
+                    <h4 style="margin-bottom: 0.5rem;">Como usar no N8n:</h4>
+                    <ol style="color: var(--text-muted); padding-left: 1.5rem;">
+                        <li>No nó HTTP Request, vá em "Authentication"</li>
+                        <li>Selecione "Header Auth"</li>
+                        <li>Nome: <code>Authorization</code></li>
+                        <li>Valor: <code>Bearer [SEU_TOKEN]</code></li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <!-- Modais -->
+        <div id="modal-container"
+            style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+
+            <!-- Modal Conhecimento -->
+            <div id="knowledge-modal" class="card" style="width: 500px; display: none;">
+                <h2 style="margin-bottom: 1.5rem;">Novo Conhecimento</h2>
+                <form id="knowledge-form">
+                    <div class="form-group">
+                        <label>Título</label>
+                        <input type="text" id="k-titulo" required placeholder="Ex: Regras de Cancelamento">
+                    </div>
+                    <div class="form-group">
+                        <label>Categoria</label>
+                        <select id="k-categoria">
+                            <option value="Geral">Geral</option>
+                            <option value="Regras">Regras</option>
+                            <option value="Produtos">Produtos</option>
+                            <option value="FAQ">FAQ</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Conteúdo (Texto para a IA ler)</label>
+                        <textarea id="k-conteudo" rows="6" required
+                            placeholder="Escreva aqui os detalhes..."></textarea>
+                    </div>
+                    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                        <button type="button" class="btn" onclick="closeModals()">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Modal Material -->
+            <div id="material-modal" class="card" style="width: 500px; display: none;">
+                <h2 style="margin-bottom: 1.5rem;">Subir Material (PDF/Imagem)</h2>
+                <form id="material-form">
+                    <div class="form-group">
+                        <label>Título</label>
+                        <input type="text" id="m-titulo" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Descrição</label>
+                        <textarea id="m-descricao" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Tags (separadas por vírgula)</label>
+                        <input type="text" id="m-tags" placeholder="vendas, tabela, 2024">
+                    </div>
+                    <div class="form-group">
+                        <label>Arquivo</label>
+                        <input type="file" id="m-arquivo" required accept=".pdf,image/*">
+                    </div>
+                    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                        <button type="submit" class="btn btn-primary">Fazer Upload</button>
+                        <button type="button" class="btn" onclick="closeModals()">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="js/admin.js"></script>
+</body>
+
+</html>

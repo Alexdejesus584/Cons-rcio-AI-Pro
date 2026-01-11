@@ -1,0 +1,98 @@
+datasource db {
+  provider = "sqlite" // Alterar para "mysql" em produção
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Usuario {
+  id         Int      @id @default(autoincrement())
+  nome       String
+  email      String   @unique
+  senha_hash String
+  role       String   @default("ADMIN") // ADMIN | SERVICE
+  scopes     String   @default("[]")    // Armazenado como JSON string no SQLite: ["ia:execute", "knowledge:write", etc]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  AuditLogs AuditLog[]
+}
+
+model KnowledgeField {
+  id             Int      @id @default(autoincrement())
+  titulo         String
+  conteudo_texto String
+  categoria      String
+  ativo          Boolean  @default(true)
+  versao         Int      @default(1)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  Historico KnowledgeHistory[]
+}
+
+model KnowledgeHistory {
+  id               Int            @id @default(autoincrement())
+  knowledgeFieldId Int
+  conteudo_texto   String
+  versao           Int
+  createdAt        DateTime       @default(now())
+  KnowledgeField   KnowledgeField @relation(fields: [knowledgeFieldId], references: [id])
+}
+
+model Material {
+  id                 Int      @id @default(autoincrement())
+  tipo               String   // PDF | IMAGE
+  arquivo            String
+  titulo             String
+  descricao          String?
+  tags               String?  // JSON string: ["vendas", "regras"]
+  contexto_semantico String?  // Obrigatório para imagens conforme spec
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model Lead {
+  id              Int      @id @default(autoincrement())
+  nome            String?
+  telefone        String   @unique
+  tipo_consorcio  String?
+  score_interesse Int      @default(0) // 0 a 100
+  status          String   @default("FRIO") // FRIO | QUENTE
+  motivos         String?  // JSON string: ["demonstrou interesse", "pediu valores"]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  messages        Message[]
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  role      String   // "user" | "assistant" | "system"
+  content   String
+  leadId    Int
+  lead      Lead     @relation(fields: [leadId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model FeedbackLoop {
+  id          Int      @id @default(autoincrement())
+  pergunta    String
+  frequencia  Int      @default(1)
+  resolvido   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  usuarioId Int?
+  acao      String   // LOGIN, IA_EXECUTE, KNOWLEDGE_CHANGE, etc
+  identidade String  // ADMIN ou SERVICE (token id)
+  detalhes  String?  // JSON string com detalhes da operação para defesa jurídica
+  ip        String?
+  createdAt DateTime @default(now())
+
+  Usuario Usuario? @relation(fields: [usuarioId], references: [id])
+}

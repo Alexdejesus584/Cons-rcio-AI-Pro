@@ -1,0 +1,181 @@
+{
+  "role": "You are a senior software architect and full-stack developer specialized in Node.js, REST APIs, knowledge-based conversational AI, secure authentication systems, Docker infrastructure, and workflow automation with N8n.",
+  "mission": "Generate a complete, production-ready system called 'Consorcio AI Knowledge'. This is a single-company conversational AI system for consórcio sales (moto, carro, imóvel, serviços). The system must educate clients, answer questions strictly using a controlled knowledge base managed by the system owner, qualify interest, classify leads, and deliver hot leads to the system owner via automation.",
+  "language": "All code, comments, logs, API responses, error messages, and documentation must be written in Brazilian Portuguese.",
+
+  "system_scope": {
+    "mode": "Single company",
+    "saas": false,
+    "future_ready_for_saas": true,
+    "note": "Do not implement multi-tenant logic. Structure the code so it can be extended in the future, but assume only one company exists."
+  },
+
+  "absolute_rules": [
+    "The AI must NEVER use external or general knowledge",
+    "The AI must NEVER invent rules, prices, approvals, deadlines, or guarantees",
+    "The AI must answer ONLY using the system knowledge base",
+    "If information does not exist in the knowledge base, the AI must clearly say it is not available",
+    "There is NO scheduling functionality",
+    "The system goal is lead qualification, not sales closing"
+  ],
+
+  "technology_stack": {
+    "backend": {
+      "runtime": "Node.js 18+",
+      "language": "JavaScript",
+      "framework": "Express.js",
+      "architecture": "Modular REST API with strict separation of concerns"
+    },
+    "database": {
+      "development": "SQLite",
+      "production": "MySQL (phpMyAdmin compatible)",
+      "orm": "Prisma ORM"
+    },
+    "ai": {
+      "provider": "OpenAI-compatible API",
+      "interaction_mode": "Conversational",
+      "response_format": "Strict JSON only",
+      "knowledge_dependency": "Mandatory and exclusive"
+    },
+    "automation": {
+      "tool": "N8n",
+      "integration": "HTTP Webhooks",
+      "security": "Authorization Bearer Service Token"
+    },
+    "frontend_admin": {
+      "technology": "HTML + CSS + Vanilla JavaScript",
+      "frameworks": "None",
+      "purpose": "Manage knowledge base, uploaded materials, and leads"
+    },
+    "infrastructure": {
+      "containerization": "Docker",
+      "orchestration": "Docker Compose",
+      "management": "Portainer",
+      "target_os": "Linux VPS"
+    }
+  },
+
+  "authentication_and_security": {
+    "model": "JWT authentication similar to OpenAI",
+    "token_type": "JWT",
+    "authorization": "Scopes-based access control",
+    "auto_rejection": {
+      "missing_token": 401,
+      "invalid_or_expired_token": 401,
+      "missing_scope": 403
+    },
+    "identity_types": [
+      { "type": "USER", "roles": ["ADMIN"] },
+      { "type": "SERVICE", "roles": ["SERVICE"] }
+    ]
+  },
+
+  "knowledge_base_definition": {
+    "mandatory": true,
+    "sources": {
+      "digital_fields": {
+        "description": "Editable text fields created by the system owner",
+        "examples": [
+          "Como funciona o consórcio",
+          "Vantagens do consórcio",
+          "Tipos de consórcio",
+          "Perguntas frequentes",
+          "Regras importantes",
+          "O que não prometer ao cliente"
+        ]
+      },
+      "pdfs": {
+        "upload": true,
+        "purpose": "Official rules, plans, and explanatory documents"
+      },
+      "images": {
+        "upload": true,
+        "metadata_required": ["titulo", "descricao", "tags"]
+      }
+    }
+  },
+
+  "database_models": {
+    "usuarios": ["id", "nome", "email", "senha_hash", "role"],
+    "knowledge_fields": ["id", "titulo", "conteudo_texto", "categoria", "ativo"],
+    "materiais": ["id", "tipo (PDF|IMAGE)", "arquivo", "titulo", "descricao", "tags"],
+    "leads": [
+      "id",
+      "nome",
+      "telefone",
+      "tipo_consorcio",
+      "nivel_interesse",
+      "status (FRIO|QUENTE)",
+      "created_at"
+    ]
+  },
+
+  "business_rules": [
+    "AI answers must be generated exclusively from the knowledge base",
+    "If the knowledge base does not contain the answer, the AI must state that clearly",
+    "Leads must be classified as FRIO or QUENTE",
+    "Only QUENTE leads must be exposed to automation",
+    "When a lead is QUENTE, the AI must inform the client that a human specialist will take over"
+  ],
+
+  "api_contract": [
+    {
+      "method": "POST",
+      "endpoint": "/api/ia/conversa",
+      "scope": "ia:execute",
+      "description": "Processes customer conversation, queries the knowledge base, and classifies lead interest"
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/knowledge",
+      "scope": "knowledge:write",
+      "description": "Create or update digital knowledge fields"
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/knowledge",
+      "scope": "knowledge:read",
+      "description": "List digital knowledge fields"
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/materiais/upload",
+      "scope": "materiais:write",
+      "description": "Upload PDFs and images with metadata"
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/leads/quentes",
+      "scope": "leads:read",
+      "description": "Returns hot leads to be consumed by N8n"
+    }
+  ],
+
+  "n8n_integration": {
+    "flow": [
+      "Receive customer message",
+      "Send message to /api/ia/conversa",
+      "Evaluate lead status",
+      "If lead is QUENTE, save it",
+      "Fetch /api/leads/quentes",
+      "Notify system owner"
+    ]
+  },
+
+  "delivery_requirements": [
+    "Generate all backend source code",
+    "Generate full knowledge base management logic",
+    "Generate secure upload handling",
+    "Generate database schema and migrations",
+    "Generate README.md with setup instructions",
+    "Do not include explanations outside generated files"
+  ],
+
+  "strict_rules": [
+    "No pseudo-code",
+    "No generic examples",
+    "No hallucinated AI behavior",
+    "Knowledge base usage is mandatory",
+    "Security must be fully implemented"
+  ]
+}

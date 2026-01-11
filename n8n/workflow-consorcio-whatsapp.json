@@ -1,0 +1,450 @@
+{
+    "name": "Consorcio AI Bot (HTTP Version - Estável)",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "whatsapp-webhook",
+                "options": {}
+            },
+            "id": "webhook-whatsapp",
+            "name": "Webhook WhatsApp",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1.1,
+            "position": [
+                250,
+                300
+            ],
+            "webhookId": "consorcio-whatsapp"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "strict"
+                    },
+                    "conditions": [
+                        {
+                            "id": "condition-msg-type-conv",
+                            "leftValue": "={{ $json.body.data.messageType }}",
+                            "rightValue": "conversation",
+                            "operator": {
+                                "type": "string",
+                                "operation": "equals"
+                            }
+                        },
+                        {
+                            "id": "condition-msg-type-ext",
+                            "leftValue": "={{ $json.body.data.messageType }}",
+                            "rightValue": "extendedTextMessage",
+                            "operator": {
+                                "type": "string",
+                                "operation": "equals"
+                            }
+                        }
+                    ],
+                    "combinator": "or"
+                },
+                "options": {}
+            },
+            "id": "filtro-texto",
+            "name": "Filtrar Mensagens de Texto",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2,
+            "position": [
+                470,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "extract-telefone",
+                            "name": "telefone",
+                            "value": "={{ $json.body.data.key.remoteJid.replace('@s.whatsapp.net', '') }}",
+                            "type": "string"
+                        },
+                        {
+                            "id": "extract-mensagem",
+                            "name": "mensagem",
+                            "value": "={{ $json.body.data.message.conversation || $json.body.data.message.extendedTextMessage?.text || '' }}",
+                            "type": "string"
+                        },
+                        {
+                            "id": "extract-nome",
+                            "name": "nome",
+                            "value": "={{ $json.body.data.pushName || 'Cliente WhatsApp' }}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "extrair-dados",
+            "name": "Extrair Dados do Cliente",
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.3,
+            "position": [
+                690,
+                200
+            ]
+        },
+        {
+            "parameters": {
+                "url": "https://consorcio-ai-alex-vendas.loca.lt/api/ia/context",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InNlcnZpY2VfMTc2ODA4MDIwNDIzOSIsIm5vbWUiOiJOOG4gQm90IEZpbmFsIiwicm9sZSI6IlNFUlZJQ0UiLCJzY29wZXMiOlsiaWE6ZXhlY3V0ZSIsImxlYWRzOnJlYWQiXSwidHlwZSI6IlNFUlZJQ0VfVE9LRU4iLCJpYXQiOjE3NjgwODAyMDQsImV4cCI6MTc5OTYxNjIwNH0.LDYXdTZImhOtD4fj2iO1o2zOS2Bad8So_2Cg81AfoXg"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "buscar-contexto",
+            "name": "Buscar Contexto (RAG)",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                910,
+                200
+            ]
+        },
+        {
+            "parameters": {
+                "options": {
+                    "systemMessage": "=Você é um assistente especializado em vendas de consórcios da 'Consorcio AI Knowledge'.\nSua missão é educar o cliente, tirar dúvidas e qualificar o interesse.\n\nREGRAS ABSOLUTAS:\n1. Responda APENAS com base na base de conhecimento fornecida abaixo.\n2. NUNCA use conhecimento externo ou geral sobre consórcios.\n\nBASE DE CONHECIMENTO:\n{{ $('Buscar Contexto (RAG)').item.json.context }}\n\nFORMATO DE RESPOSTA OBRIGATÓRIO (JSON):\nVocê DEVE responder APENAS um objeto JSON válido, sem blocos de código markdown (```json ... ```), apenas o objeto puro:\n{\n  \"resposta\": \"Texto da sua resposta para o cliente\",\n  \"status_lead\": \"FRIO\" ou \"QUENTE\",\n  \"tipo_consorcio\": \"Moto\", \"Carro\", \"Imóvel\", \"Serviços\",\n  \"score_interesse\": 0 a 100,\n  \"motivos\": [\"motivo 1\"]\n}"
+                }
+            },
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "typeVersion": 1.6,
+            "position": [
+                1130,
+                200
+            ],
+            "id": "ai-agent",
+            "name": "AI Agent"
+        },
+        {
+            "parameters": {
+                "jsCode": "try {\n  const rawOutput = items[0].json.output || items[0].json.text;\n  const cleanOutput = rawOutput.replace(/```json/g, '').replace(/```/g, '').trim();\n  return JSON.parse(cleanOutput);\n} catch (e) {\n  return { resposta: items[0].json.output, status_lead: 'FRIO' };\n}"
+            },
+            "id": "parse-json",
+            "name": "Parse JSON Output",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1350,
+                200
+            ]
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "strict"
+                    },
+                    "conditions": [
+                        {
+                            "id": "check-lead-quente",
+                            "leftValue": "={{ $json.status_lead }}",
+                            "rightValue": "QUENTE",
+                            "operator": {
+                                "type": "string",
+                                "operation": "equals"
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            },
+            "id": "lead-check",
+            "name": "Lead é QUENTE?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2,
+            "position": [
+                1570,
+                200
+            ]
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https://evolutionapi3.m2vendas.com.br/message/sendText/imobconecit",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "apikey",
+                            "value": "F48151195869-4351-87C4-1AD8E23782C2"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "number",
+                            "value": "={{ $('Extrair Dados do Cliente').item.json.telefone }}"
+                        },
+                        {
+                            "name": "text",
+                            "value": "={{ $json.resposta }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "enviar-resposta-http",
+            "name": "Enviar Resposta (HTTP)",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                1800,
+                100
+            ]
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https://evolutionapi3.m2vendas.com.br/message/sendText/imobconecit",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "apikey",
+                            "value": "F48151195869-4351-87C4-1AD8E23782C2"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "number",
+                            "value": "SEU_NUMERO_ADMIN"
+                        },
+                        {
+                            "name": "text",
+                            "value": "=🔥 LEAD QUENTE DETECTADO!\n\nNome: {{ $('Extrair Dados do Cliente').item.json.nome }}\nTelefone: {{ $('Extrair Dados do Cliente').item.json.telefone }}\nInteresse: {{ $json.score_interesse }}%\nMotivos: {{ ($json.motivos || []).join(', ') }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "notificar-admin-http",
+            "name": "Notificar Admin (HTTP)",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                1800,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https://evolutionapi3.m2vendas.com.br/message/sendText/imobconecit",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "apikey",
+                            "value": "F48151195869-4351-87C4-1AD8E23782C2"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "number",
+                            "value": "={{ $('Extrair Dados do Cliente').item.json.telefone }}"
+                        },
+                        {
+                            "name": "text",
+                            "value": "={{ $json.resposta }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "enviar-resposta-frio-http",
+            "name": "Enviar Resposta Frio (HTTP)",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                1800,
+                450
+            ]
+        },
+        {
+            "parameters": {},
+            "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+            "typeVersion": 1.3,
+            "position": [
+                1140,
+                440
+            ],
+            "id": "memory",
+            "name": "Simple Memory"
+        },
+        {
+            "parameters": {
+                "model": {
+                    "__rl": true,
+                    "mode": "list",
+                    "value": "gpt-4-turbo-preview"
+                },
+                "options": {}
+            },
+            "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+            "typeVersion": 1.3,
+            "position": [
+                1060,
+                580
+            ],
+            "id": "openai-model",
+            "name": "OpenAI Chat Model",
+            "credentials": {
+                "openAiApi": {
+                    "id": "FzpmDpM5bAvVavYm",
+                    "name": "imobcht"
+                }
+            }
+        },
+        {
+            "parameters": {},
+            "id": "msg-descartada",
+            "name": "Mensagem Descartada",
+            "type": "n8n-nodes-base.noOp",
+            "typeVersion": 1,
+            "position": [
+                690,
+                400
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook WhatsApp": {
+            "main": [
+                [
+                    {
+                        "node": "Filtrar Mensagens de Texto",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Filtrar Mensagens de Texto": {
+            "main": [
+                [
+                    {
+                        "node": "Extrair Dados do Cliente",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Extrair Dados do Cliente": {
+            "main": [
+                [
+                    {
+                        "node": "Buscar Contexto (RAG)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Buscar Contexto (RAG)": {
+            "main": [
+                [
+                    {
+                        "node": "AI Agent",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "AI Agent": {
+            "main": [
+                [
+                    {
+                        "node": "Parse JSON Output",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Parse JSON Output": {
+            "main": [
+                [
+                    {
+                        "node": "Lead é QUENTE?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Lead é QUENTE?": {
+            "main": [
+                [
+                    {
+                        "node": "Enviar Resposta (HTTP)",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Notificar Admin (HTTP)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Enviar Resposta Frio (HTTP)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Simple Memory": {
+            "ai_memory": [
+                [
+                    {
+                        "node": "AI Agent",
+                        "type": "ai_memory",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "OpenAI Chat Model": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "AI Agent",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}
